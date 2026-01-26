@@ -276,6 +276,24 @@ export default {
       }
     }
 
+    // Debug endpoint - list all processes
+    if (url.pathname === '/processes') {
+      try {
+        const processes = await sandbox.listProcesses();
+        return Response.json({
+          count: processes.length,
+          processes: processes.map(p => ({
+            id: p.id,
+            command: p.command,
+            status: p.status,
+          })),
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return Response.json({ error: errorMessage }, { status: 500 });
+      }
+    }
+
     // Logs endpoint - returns container logs for debugging
     if (url.pathname === '/logs') {
       try {
