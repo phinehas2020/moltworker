@@ -27,7 +27,7 @@ RUN mkdir -p /root/.clawdbot \
     && mkdir -p /root/clawd/skills
 
 # Copy startup script
-# Build cache bust: 2026-01-27-v21-rename-to-moltbot
+# Build cache bust: 2026-01-28-v22-force-rebuild
 COPY start-clawdbot.sh /usr/local/bin/start-clawdbot.sh
 RUN chmod +x /usr/local/bin/start-clawdbot.sh
 
