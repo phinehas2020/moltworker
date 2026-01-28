@@ -1,5 +1,6 @@
 #!/bin/bash
 # Startup script for Moltbot in Cloudflare Sandbox
+# Version: 2026-01-28-v2
 # This script:
 # 1. Mounts R2 bucket using tigrisfs FUSE (if credentials provided)
 # 2. Configures moltbot from environment variables
