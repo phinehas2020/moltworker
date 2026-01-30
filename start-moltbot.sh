@@ -146,14 +146,19 @@ try {
     console.log('Starting with empty config');
 }
 
-// Ensure nested objects exist
-config.agents = config.agents || {};
-config.agents.defaults = config.agents.defaults || {};
+// Ensure nested objects exist (and coerce to objects if corrupted)
+config.agents = (config.agents && typeof config.agents === 'object') ? config.agents : {};
+config.agents.defaults = (config.agents.defaults && typeof config.agents.defaults === 'object') ? config.agents.defaults : {};
 if (!config.agents.defaults.model || typeof config.agents.defaults.model !== 'object') {
     config.agents.defaults.model = {};
 }
-config.gateway = config.gateway || {};
-config.channels = config.channels || {};
+if (!config.agents.defaults.models || typeof config.agents.defaults.models !== 'object') {
+    config.agents.defaults.models = {};
+}
+config.models = (config.models && typeof config.models === 'object') ? config.models : {};
+config.models.providers = (config.models.providers && typeof config.models.providers === 'object') ? config.models.providers : {};
+config.gateway = (config.gateway && typeof config.gateway === 'object') ? config.gateway : {};
+config.channels = (config.channels && typeof config.channels === 'object') ? config.channels : {};
 
 // Clean up any broken anthropic provider config from previous runs
 // (older versions didn't include required 'name' field)
