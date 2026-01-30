@@ -35,11 +35,11 @@ jobs:
         run: npm ci
 
       - name: Build and push container image
-        run: npx wrangler containers build -p -t moltworker:latest .
+        run: npx wrangler containers build -p -t moltworker:${{ github.sha }} .
 
       - name: Generate CI Wrangler config
         run: |
-          sed "s/__CLOUDFLARE_ACCOUNT_ID__/${CLOUDFLARE_ACCOUNT_ID}/g" wrangler.jsonc > wrangler.ci.generated.jsonc
+          sed "s/__CLOUDFLARE_ACCOUNT_ID__/${CLOUDFLARE_ACCOUNT_ID}/g; s/__IMAGE_TAG__/${{ github.sha }}/g" wrangler.jsonc > wrangler.ci.generated.jsonc
 
       - name: Deploy Worker
         run: npx wrangler deploy --config wrangler.ci.generated.jsonc

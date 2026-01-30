@@ -36,8 +36,8 @@
   "containers": [
     {
       "class_name": "Sandbox",
-      // CI replaces __CLOUDFLARE_ACCOUNT_ID__ before deploy
-      "image": "registry.cloudflare.com/__CLOUDFLARE_ACCOUNT_ID__/moltworker:latest",
+      // CI replaces __CLOUDFLARE_ACCOUNT_ID__ and __IMAGE_TAG__ before deploy
+      "image": "registry.cloudflare.com/__CLOUDFLARE_ACCOUNT_ID__/moltworker:__IMAGE_TAG__",
       "instance_type": "standard-4",
       "max_instances": 1,
     },

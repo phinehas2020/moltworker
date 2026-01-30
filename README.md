@@ -89,7 +89,7 @@ If you don’t want to run Docker locally, use the GitHub Actions deploy workflo
 2. Push to `main` or run the **Deploy** workflow manually.
 
 Notes:
-- The workflow replaces the `__CLOUDFLARE_ACCOUNT_ID__` placeholder in `wrangler.jsonc` at deploy time.
+- The workflow replaces `__CLOUDFLARE_ACCOUNT_ID__` and `__IMAGE_TAG__` in `wrangler.jsonc` at deploy time.
 - `wrangler.local.jsonc` points at `./Dockerfile` for local development (use `wrangler dev --config wrangler.local.jsonc`).
 
 ## Setting Up the Admin UI
