@@ -260,11 +260,16 @@ if (baseUrl && isOpenAI) {
 } else if (baseUrl && isGoogle) {
     const geminiBaseUrl = baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
     console.log('Configuring Google Gemini provider with base URL:', geminiBaseUrl);
+    const geminiModels = [
+        { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro Preview' },
+        { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview' },
+    ];
     config.models = config.models || {};
     config.models.providers = config.models.providers || {};
     const providerConfig = {
         baseUrl: geminiBaseUrl,
         api: 'google-generative-ai',
+        models: geminiModels,
     };
     if (process.env.GEMINI_API_KEY) {
         providerConfig.apiKey = process.env.GEMINI_API_KEY;
@@ -272,6 +277,7 @@ if (baseUrl && isOpenAI) {
     config.models.providers.google = providerConfig;
     config.agents.defaults.models = config.agents.defaults.models || {};
     config.agents.defaults.models['google/gemini-3-flash-preview'] = { alias: 'Gemini 3 Flash' };
+    config.agents.defaults.models['google/gemini-3-pro-preview'] = { alias: 'Gemini 3 Pro' };
     config.agents.defaults.model.primary = 'google/gemini-3-flash-preview';
 } else if (baseUrl) {
     console.log('Configuring Anthropic provider with base URL:', baseUrl);
@@ -302,11 +308,16 @@ if (baseUrl && isOpenAI) {
         ? process.env.GEMINI_BASE_URL.replace(/\/+$/, '')
         : 'https://generativelanguage.googleapis.com/v1beta';
     console.log('Configuring Google Gemini provider with base URL:', geminiBaseUrl);
+    const geminiModels = [
+        { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro Preview' },
+        { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview' },
+    ];
     config.models = config.models || {};
     config.models.providers = config.models.providers || {};
     const providerConfig = {
         baseUrl: geminiBaseUrl,
         api: 'google-generative-ai',
+        models: geminiModels,
     };
     if (process.env.GEMINI_API_KEY) {
         providerConfig.apiKey = process.env.GEMINI_API_KEY;
@@ -314,6 +325,7 @@ if (baseUrl && isOpenAI) {
     config.models.providers.google = providerConfig;
     config.agents.defaults.models = config.agents.defaults.models || {};
     config.agents.defaults.models['google/gemini-3-flash-preview'] = { alias: 'Gemini 3 Flash' };
+    config.agents.defaults.models['google/gemini-3-pro-preview'] = { alias: 'Gemini 3 Pro' };
     config.agents.defaults.model.primary = 'google/gemini-3-flash-preview';
 } else {
     // Default to Anthropic without custom base URL (uses built-in pi-ai catalog)
