@@ -11,7 +11,7 @@ Run [OpenClaw](https://github.com/openclaw/openclaw) (formerly Moltbot, formerly
 ## Requirements
 
 - [Workers Paid plan](https://www.cloudflare.com/plans/developer-platform/) ($5 USD/month) — required for Cloudflare Sandbox containers
-- [Anthropic API key](https://console.anthropic.com/) — for Claude access, or you can use AI Gateway's [Unified Billing](https://developers.cloudflare.com/ai-gateway/features/unified-billing/)
+- An AI provider key: [Anthropic API key](https://console.anthropic.com/) or a Google Gemini API key (or use AI Gateway's [Unified Billing](https://developers.cloudflare.com/ai-gateway/features/unified-billing/))
 
 The following Cloudflare features used by this project have free tiers:
 - Cloudflare Access (authentication)
@@ -43,8 +43,11 @@ _Cloudflare Sandboxes are available on the [Workers Paid plan](https://dash.clou
 # Install dependencies
 npm install
 
-# Set your API key (direct Anthropic access)
+# Set your API key (choose one)
+# Direct Anthropic access:
 npx wrangler secret put ANTHROPIC_API_KEY
+# Direct Gemini access:
+# npx wrangler secret put GEMINI_API_KEY
 
 # Or use AI Gateway instead (see "Optional: Cloudflare AI Gateway" below)
 # npx wrangler secret put AI_GATEWAY_API_KEY
@@ -75,6 +78,19 @@ Replace `your-worker` with your actual worker subdomain and `YOUR_GATEWAY_TOKEN`
 > 2. [Pair your device](#device-pairing) via the admin UI at `/_admin/`
 
 You'll also likely want to [enable R2 storage](#persistent-storage-r2) so your paired devices and conversation history persist across container restarts (optional but recommended).
+
+## CI Deploy (No Local Docker)
+
+If you don’t want to run Docker locally, use the GitHub Actions deploy workflow. It builds/pushes the container image in CI and deploys the Worker using the pre-built registry image.
+
+1. Add GitHub secrets:
+   - `CLOUDFLARE_API_TOKEN` (API token with Workers/Containers permissions)
+   - `CLOUDFLARE_ACCOUNT_ID` (your Cloudflare account ID)
+2. Push to `main` or run the **Deploy** workflow manually.
+
+Notes:
+- The workflow replaces the `__CLOUDFLARE_ACCOUNT_ID__` placeholder in `wrangler.jsonc` at deploy time.
+- `wrangler.local.jsonc` points at `./Dockerfile` for local development (use `wrangler dev --config wrangler.local.jsonc`).
 
 ## Setting Up the Admin UI
 
@@ -137,6 +153,8 @@ For local development, create a `.dev.vars` file with:
 DEV_MODE=true               # Skip Cloudflare Access auth + bypass device pairing
 DEBUG_ROUTES=true           # Enable /debug/* routes (optional)
 ```
+
+Local dev uses `wrangler.local.jsonc` (via `npm run start`) and requires Docker to build the container image.
 
 ## Authentication
 
@@ -333,18 +351,19 @@ You can route API requests through [Cloudflare AI Gateway](https://developers.cl
 ### Setup
 
 1. Create an AI Gateway in the [AI Gateway section](https://dash.cloudflare.com/?to=/:account/ai/ai-gateway/create-gateway) of the Cloudflare Dashboard.
-2. Add a provider (e.g., Anthropic) to your gateway
+2. Add a provider (e.g., Anthropic or Google AI Studio) to your gateway
 3. Set the gateway secrets:
 
-You'll find the base URL on the Overview tab of your newly created gateway. At the bottom of the page, expand the **Native API/SDK Examples** section and select "Anthropic".
+You'll find the base URL on the Overview tab of your newly created gateway. At the bottom of the page, expand the **Native API/SDK Examples** section and select your provider (e.g., Anthropic or Google AI Studio).
 
 ```bash
-# Your provider's API key (e.g., Anthropic API key)
+# Your provider's API key (e.g., Anthropic or Gemini API key)
 npx wrangler secret put AI_GATEWAY_API_KEY
 
 # Your AI Gateway endpoint URL
 npx wrangler secret put AI_GATEWAY_BASE_URL
 # Enter: https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/anthropic
+# Or:    https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/google-ai-studio
 ```
 
 4. Redeploy:
@@ -353,7 +372,7 @@ npx wrangler secret put AI_GATEWAY_BASE_URL
 npm run deploy
 ```
 
-The `AI_GATEWAY_*` variables take precedence over `ANTHROPIC_*` if both are set.
+The `AI_GATEWAY_*` variables take precedence over direct provider keys if both are set.
 
 ## All Secrets Reference
 
@@ -363,6 +382,8 @@ The `AI_GATEWAY_*` variables take precedence over `ANTHROPIC_*` if both are set.
 | `AI_GATEWAY_BASE_URL` | Yes* | AI Gateway endpoint URL (required when using `AI_GATEWAY_API_KEY`) |
 | `ANTHROPIC_API_KEY` | Yes* | Direct Anthropic API key (fallback if AI Gateway not configured) |
 | `ANTHROPIC_BASE_URL` | No | Direct Anthropic API base URL (fallback) |
+| `GEMINI_API_KEY` | Yes* | Direct Gemini API key (fallback if AI Gateway not configured) |
+| `GEMINI_BASE_URL` | No | Direct Gemini API base URL (optional override) |
 | `OPENAI_API_KEY` | No | OpenAI API key (alternative provider) |
 | `CF_ACCESS_TEAM_DOMAIN` | Yes* | Cloudflare Access team domain (required for admin UI) |
 | `CF_ACCESS_AUD` | Yes* | Cloudflare Access application audience (required for admin UI) |

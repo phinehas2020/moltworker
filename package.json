@@ -6,9 +6,9 @@
   "description": "Run Moltbot personal AI assistant in a Cloudflare Sandbox",
   "scripts": {
     "build": "vite build",
-    "deploy": "npm run build && wrangler deploy",
+    "deploy": "npm run build && wrangler deploy --config wrangler.local.jsonc",
     "dev": "vite dev",
-    "start": "wrangler dev",
+    "start": "wrangler dev --config wrangler.local.jsonc",
     "types": "wrangler types",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -42,6 +42,9 @@
     "bindings": {
       "ANTHROPIC_API_KEY": {
         "description": "Your [Anthropic API key](https://console.anthropic.com/)."
+      },
+      "GEMINI_API_KEY": {
+        "description": "Your Google Gemini API key."
       },
       "MOLTBOT_GATEWAY_TOKEN": {
         "description": "Token for gateway access. Generate with: openssl rand -hex 32"

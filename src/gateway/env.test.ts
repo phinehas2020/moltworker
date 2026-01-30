@@ -15,6 +15,12 @@ describe('buildEnvVars', () => {
     expect(result.ANTHROPIC_API_KEY).toBe('sk-test-key');
   });
 
+  it('includes GEMINI_API_KEY when set directly', () => {
+    const env = createMockEnv({ GEMINI_API_KEY: 'sk-gemini-key' });
+    const result = buildEnvVars(env);
+    expect(result.GEMINI_API_KEY).toBe('sk-gemini-key');
+  });
+
   it('maps AI_GATEWAY_API_KEY to ANTHROPIC_API_KEY for Anthropic gateway', () => {
     const env = createMockEnv({
       AI_GATEWAY_API_KEY: 'sk-gateway-key',
@@ -23,6 +29,18 @@ describe('buildEnvVars', () => {
     const result = buildEnvVars(env);
     expect(result.ANTHROPIC_API_KEY).toBe('sk-gateway-key');
     expect(result.ANTHROPIC_BASE_URL).toBe('https://gateway.ai.cloudflare.com/v1/123/my-gw/anthropic');
+    expect(result.OPENAI_API_KEY).toBeUndefined();
+  });
+
+  it('maps AI_GATEWAY_API_KEY to GEMINI_API_KEY for Google AI Studio gateway', () => {
+    const env = createMockEnv({
+      AI_GATEWAY_API_KEY: 'sk-gateway-key',
+      AI_GATEWAY_BASE_URL: 'https://gateway.ai.cloudflare.com/v1/123/my-gw/google-ai-studio',
+    });
+    const result = buildEnvVars(env);
+    expect(result.GEMINI_API_KEY).toBe('sk-gateway-key');
+    expect(result.GEMINI_BASE_URL).toBe('https://gateway.ai.cloudflare.com/v1/123/my-gw/google-ai-studio');
+    expect(result.ANTHROPIC_API_KEY).toBeUndefined();
     expect(result.OPENAI_API_KEY).toBeUndefined();
   });
 
@@ -69,6 +87,19 @@ describe('buildEnvVars', () => {
     expect(result.OPENAI_BASE_URL).toBe('https://gateway.example.com/openai');
   });
 
+  it('AI_GATEWAY_* takes precedence over direct provider keys for Gemini', () => {
+    const env = createMockEnv({
+      AI_GATEWAY_API_KEY: 'gateway-key',
+      AI_GATEWAY_BASE_URL: 'https://gateway.example.com/google-ai-studio',
+      GEMINI_API_KEY: 'direct-key',
+      GEMINI_BASE_URL: 'https://generativelanguage.googleapis.com/v1beta',
+    });
+    const result = buildEnvVars(env);
+    expect(result.GEMINI_API_KEY).toBe('gateway-key');
+    expect(result.AI_GATEWAY_BASE_URL).toBe('https://gateway.example.com/google-ai-studio');
+    expect(result.GEMINI_BASE_URL).toBe('https://gateway.example.com/google-ai-studio');
+  });
+
   it('falls back to ANTHROPIC_* when AI_GATEWAY_* not set', () => {
     const env = createMockEnv({
       ANTHROPIC_API_KEY: 'direct-key',
@@ -77,6 +108,16 @@ describe('buildEnvVars', () => {
     const result = buildEnvVars(env);
     expect(result.ANTHROPIC_API_KEY).toBe('direct-key');
     expect(result.ANTHROPIC_BASE_URL).toBe('https://api.anthropic.com');
+  });
+
+  it('passes GEMINI_BASE_URL directly when set', () => {
+    const env = createMockEnv({
+      GEMINI_API_KEY: 'direct-key',
+      GEMINI_BASE_URL: 'https://generativelanguage.googleapis.com/v1beta',
+    });
+    const result = buildEnvVars(env);
+    expect(result.GEMINI_API_KEY).toBe('direct-key');
+    expect(result.GEMINI_BASE_URL).toBe('https://generativelanguage.googleapis.com/v1beta');
   });
 
   it('includes OPENAI_API_KEY when set directly (no gateway)', () => {
@@ -158,6 +199,19 @@ describe('buildEnvVars', () => {
     expect(result.ANTHROPIC_BASE_URL).toBe('https://gateway.ai.cloudflare.com/v1/123/my-gw/anthropic');
     expect(result.AI_GATEWAY_BASE_URL).toBe('https://gateway.ai.cloudflare.com/v1/123/my-gw/anthropic');
     expect(result.OPENAI_API_KEY).toBeUndefined();
+  });
+
+  it('handles trailing slash in AI_GATEWAY_BASE_URL for Google AI Studio', () => {
+    const env = createMockEnv({
+      AI_GATEWAY_API_KEY: 'sk-gateway-key',
+      AI_GATEWAY_BASE_URL: 'https://gateway.ai.cloudflare.com/v1/123/my-gw/google-ai-studio/',
+    });
+    const result = buildEnvVars(env);
+    expect(result.GEMINI_API_KEY).toBe('sk-gateway-key');
+    expect(result.GEMINI_BASE_URL).toBe('https://gateway.ai.cloudflare.com/v1/123/my-gw/google-ai-studio');
+    expect(result.AI_GATEWAY_BASE_URL).toBe('https://gateway.ai.cloudflare.com/v1/123/my-gw/google-ai-studio');
+    expect(result.OPENAI_API_KEY).toBeUndefined();
+    expect(result.ANTHROPIC_API_KEY).toBeUndefined();
   });
 
   it('handles multiple trailing slashes in AI_GATEWAY_BASE_URL', () => {

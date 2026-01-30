@@ -11,13 +11,22 @@ export function buildEnvVars(env: MoltbotEnv): Record<string, string> {
 
   // Normalize the base URL by removing trailing slashes
   const normalizedBaseUrl = env.AI_GATEWAY_BASE_URL?.replace(/\/+$/, '');
-  const isOpenAIGateway = normalizedBaseUrl?.endsWith('/openai');
+  const normalizedBaseUrlLower = normalizedBaseUrl?.toLowerCase();
+  const isOpenAIGateway =
+    normalizedBaseUrlLower?.endsWith('/openai') || normalizedBaseUrlLower?.endsWith('/compat');
+  const isGoogleGateway =
+    normalizedBaseUrlLower?.endsWith('/google-ai-studio') ||
+    normalizedBaseUrlLower?.endsWith('/google-vertex-ai') ||
+    normalizedBaseUrlLower?.endsWith('/google') ||
+    normalizedBaseUrlLower?.endsWith('/gemini');
 
   // AI Gateway vars take precedence
   // Map to the appropriate provider env var based on the gateway endpoint
   if (env.AI_GATEWAY_API_KEY) {
     if (isOpenAIGateway) {
       envVars.OPENAI_API_KEY = env.AI_GATEWAY_API_KEY;
+    } else if (isGoogleGateway) {
+      envVars.GEMINI_API_KEY = env.AI_GATEWAY_API_KEY;
     } else {
       envVars.ANTHROPIC_API_KEY = env.AI_GATEWAY_API_KEY;
     }
@@ -26,6 +35,9 @@ export function buildEnvVars(env: MoltbotEnv): Record<string, string> {
   // Fall back to direct provider keys
   if (!envVars.ANTHROPIC_API_KEY && env.ANTHROPIC_API_KEY) {
     envVars.ANTHROPIC_API_KEY = env.ANTHROPIC_API_KEY;
+  }
+  if (!envVars.GEMINI_API_KEY && env.GEMINI_API_KEY) {
+    envVars.GEMINI_API_KEY = env.GEMINI_API_KEY;
   }
   if (!envVars.OPENAI_API_KEY && env.OPENAI_API_KEY) {
     envVars.OPENAI_API_KEY = env.OPENAI_API_KEY;
@@ -37,9 +49,13 @@ export function buildEnvVars(env: MoltbotEnv): Record<string, string> {
     // Also set the provider-specific base URL env var
     if (isOpenAIGateway) {
       envVars.OPENAI_BASE_URL = normalizedBaseUrl;
+    } else if (isGoogleGateway) {
+      envVars.GEMINI_BASE_URL = normalizedBaseUrl;
     } else {
       envVars.ANTHROPIC_BASE_URL = normalizedBaseUrl;
     }
+  } else if (env.GEMINI_BASE_URL) {
+    envVars.GEMINI_BASE_URL = env.GEMINI_BASE_URL;
   } else if (env.ANTHROPIC_BASE_URL) {
     envVars.ANTHROPIC_BASE_URL = env.ANTHROPIC_BASE_URL;
   }

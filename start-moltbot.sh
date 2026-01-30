@@ -209,13 +209,27 @@ if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_APP_TOKEN) {
 }
 
 // Base URL override (e.g., for Cloudflare AI Gateway)
-// Usage: Set AI_GATEWAY_BASE_URL or ANTHROPIC_BASE_URL to your endpoint like:
+// Usage: Set AI_GATEWAY_BASE_URL or provider-specific base URL to your endpoint like:
 //   https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/anthropic
 //   https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/openai
-const baseUrl = (process.env.AI_GATEWAY_BASE_URL || process.env.ANTHROPIC_BASE_URL || '').replace(/\/+$/, '');
-const isOpenAI = baseUrl.endsWith('/openai');
+//   https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/google-ai-studio
+const baseUrl = (
+    process.env.AI_GATEWAY_BASE_URL ||
+    process.env.GEMINI_BASE_URL ||
+    process.env.ANTHROPIC_BASE_URL ||
+    process.env.OPENAI_BASE_URL ||
+    ''
+).replace(/\/+$/, '');
+const baseUrlLower = baseUrl.toLowerCase();
+const isOpenAI = baseUrlLower.endsWith('/openai') || baseUrlLower.endsWith('/compat');
+const isGoogle =
+    baseUrlLower.endsWith('/google-ai-studio') ||
+    baseUrlLower.endsWith('/google-vertex-ai') ||
+    baseUrlLower.endsWith('/google') ||
+    baseUrlLower.endsWith('/gemini') ||
+    baseUrlLower.includes('generativelanguage.googleapis.com');
 
-if (isOpenAI) {
+if (baseUrl && isOpenAI) {
     // Create custom openai provider config with baseUrl override
     // Omit apiKey so moltbot falls back to OPENAI_API_KEY env var
     console.log('Configuring OpenAI provider with base URL:', baseUrl);
@@ -236,6 +250,22 @@ if (isOpenAI) {
     config.agents.defaults.models['openai/gpt-5'] = { alias: 'GPT-5' };
     config.agents.defaults.models['openai/gpt-4.5-preview'] = { alias: 'GPT-4.5' };
     config.agents.defaults.model.primary = 'openai/gpt-5.2';
+} else if (baseUrl && isGoogle) {
+    const geminiBaseUrl = baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
+    console.log('Configuring Google Gemini provider with base URL:', geminiBaseUrl);
+    config.models = config.models || {};
+    config.models.providers = config.models.providers || {};
+    const providerConfig = {
+        baseUrl: geminiBaseUrl,
+        api: 'google-generative-ai',
+    };
+    if (process.env.GEMINI_API_KEY) {
+        providerConfig.apiKey = process.env.GEMINI_API_KEY;
+    }
+    config.models.providers.google = providerConfig;
+    config.agents.defaults.models = config.agents.defaults.models || {};
+    config.agents.defaults.models['google/gemini-3-flash-preview'] = { alias: 'Gemini 3 Flash' };
+    config.agents.defaults.model.primary = 'google/gemini-3-flash-preview';
 } else if (baseUrl) {
     console.log('Configuring Anthropic provider with base URL:', baseUrl);
     config.models = config.models || {};
@@ -260,6 +290,24 @@ if (isOpenAI) {
     config.agents.defaults.models['anthropic/claude-sonnet-4-5-20250929'] = { alias: 'Sonnet 4.5' };
     config.agents.defaults.models['anthropic/claude-haiku-4-5-20251001'] = { alias: 'Haiku 4.5' };
     config.agents.defaults.model.primary = 'anthropic/claude-opus-4-5-20251101';
+} else if (process.env.GEMINI_API_KEY || process.env.GEMINI_BASE_URL) {
+    const geminiBaseUrl = process.env.GEMINI_BASE_URL
+        ? process.env.GEMINI_BASE_URL.replace(/\/+$/, '')
+        : 'https://generativelanguage.googleapis.com/v1beta';
+    console.log('Configuring Google Gemini provider with base URL:', geminiBaseUrl);
+    config.models = config.models || {};
+    config.models.providers = config.models.providers || {};
+    const providerConfig = {
+        baseUrl: geminiBaseUrl,
+        api: 'google-generative-ai',
+    };
+    if (process.env.GEMINI_API_KEY) {
+        providerConfig.apiKey = process.env.GEMINI_API_KEY;
+    }
+    config.models.providers.google = providerConfig;
+    config.agents.defaults.models = config.agents.defaults.models || {};
+    config.agents.defaults.models['google/gemini-3-flash-preview'] = { alias: 'Gemini 3 Flash' };
+    config.agents.defaults.model.primary = 'google/gemini-3-flash-preview';
 } else {
     // Default to Anthropic without custom base URL (uses built-in pi-ai catalog)
     config.agents.defaults.model.primary = 'anthropic/claude-opus-4-5';
