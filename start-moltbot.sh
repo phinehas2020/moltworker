@@ -149,7 +149,9 @@ try {
 // Ensure nested objects exist
 config.agents = config.agents || {};
 config.agents.defaults = config.agents.defaults || {};
-config.agents.defaults.model = config.agents.defaults.model || {};
+if (!config.agents.defaults.model || typeof config.agents.defaults.model !== 'object') {
+    config.agents.defaults.model = {};
+}
 config.gateway = config.gateway || {};
 config.channels = config.channels || {};
 
